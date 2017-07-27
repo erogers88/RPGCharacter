@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Data.SqlClient;
+using Database;
 
 namespace RPGCharacter
 {
@@ -20,7 +22,7 @@ namespace RPGCharacter
 
             Console.WriteLine("What is your alignment?");
             int AlignLoopNumber = 1;
-            foreach(string align in Alignment.AlignmentType)
+            foreach (string align in Alignment.AlignmentType)
             {
                 Console.WriteLine("{0} : {1}", AlignLoopNumber, align);
                 AlignLoopNumber++;
@@ -36,7 +38,10 @@ namespace RPGCharacter
             PrintStats Print1 = new PrintStats();
             Print1.Main(PC);
             Console.ReadLine();
-           
+
+            SaveCharacter Save1 = new SaveCharacter();
+            Save1.SaveFunction(PC);
+
 
         }
     }
@@ -52,7 +57,7 @@ namespace RPGCharacter
         public string Alignment { get; set; }
         public string Bio { get; set; }
     }
-    
+
     public class RollStats
     {
         public void Main(Character Char)
@@ -70,7 +75,7 @@ namespace RPGCharacter
     public class PrintStats
     {
         public void Main(Character Char)
-        {          
+        {
             Console.WriteLine("Name: {0}", Char.Name);
             Console.WriteLine("Strength: {0}", Char.Strength);
             Console.WriteLine("Dexterity: {0}", Char.Dexterity);
@@ -81,10 +86,10 @@ namespace RPGCharacter
             Console.WriteLine("Alignment: {0}", Char.Alignment);
             Console.WriteLine("Bio: {0}", Char.Bio);
         }
-            
+
     }
 
-    public class Alignment
+    public static class Alignment
     {
         public static string[] AlignmentType =
 {
@@ -99,4 +104,29 @@ namespace RPGCharacter
             "Chaotic Evil"
         };
     }
-}
+
+    public class SaveCharacter
+    {
+        public void SaveFunction(Character CharName)
+        {
+
+
+            //string User = System.Convert.ToString(System.Security.Principal.WindowsIdentity.GetCurrent());
+            string Path = @"C:\Users\erikwr\Documents\RPGSave.txt";
+            if (System.IO.File.Exists(Path))
+            {
+                System.IO.File.Delete(Path);
+            }
+            System.IO.File.AppendAllText(Path, CharName.Name + Environment.NewLine);
+            System.IO.File.AppendAllText(Path, "Strength: " + Convert.ToString(CharName.Strength) + Environment.NewLine);
+            System.IO.File.AppendAllText(Path, "Dexterity: " + Convert.ToString(CharName.Dexterity) + Environment.NewLine);
+            System.IO.File.AppendAllText(Path, "Constitution: " + Convert.ToString(CharName.Constitution) + Environment.NewLine);
+            System.IO.File.AppendAllText(Path, "Wisdom: " + Convert.ToString(CharName.Wisdom) + Environment.NewLine);
+            System.IO.File.AppendAllText(Path, "Intelligence: " + Convert.ToString(CharName.Intelligence) + Environment.NewLine);
+            System.IO.File.AppendAllText(Path, "Charisma: " + Convert.ToString(CharName.Charisma) + Environment.NewLine);
+            System.IO.File.AppendAllText(Path, "Alignment: " + CharName.Alignment + Environment.NewLine);
+            System.IO.File.AppendAllText(Path, "Bio: " + CharName.Bio + Environment.NewLine);
+        }
+    }
+
+}  
