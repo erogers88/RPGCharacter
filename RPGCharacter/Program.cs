@@ -22,14 +22,13 @@ namespace RPGCharacter
 
             Console.WriteLine("What is your alignment?");
             int AlignLoopNumber = 1;
-            foreach (string align in Alignment.AlignmentType)
+            foreach (int align in Alignment.AlignmentType)
             {
                 Console.WriteLine("{0} : {1}", AlignLoopNumber, align);
                 AlignLoopNumber++;
             }
             int AlignInput = (Convert.ToInt32(Console.ReadLine())) - 1;
             PC.Alignment = Alignment.AlignmentType[AlignInput];
-
 
             Console.WriteLine("Press any key to roll your stats");
             Console.ReadLine();
@@ -42,6 +41,10 @@ namespace RPGCharacter
             SaveCharacter Save1 = new SaveCharacter();
             Save1.SaveFunction(PC);
 
+            TestDB WriteAlignments = new TestDB();
+            WriteAlignments.GetLine();
+
+            Console.ReadLine();
 
         }
     }
@@ -54,7 +57,7 @@ namespace RPGCharacter
         public int Wisdom { get; set; }
         public int Intelligence { get; set; }
         public int Charisma { get; set; }
-        public string Alignment { get; set; }
+        public int Alignment { get; set; }
         public string Bio { get; set; }
     }
 
@@ -91,17 +94,17 @@ namespace RPGCharacter
 
     public static class Alignment
     {
-        public static string[] AlignmentType =
+        public static int[] AlignmentType =
 {
-            "Lawful Good",
-            "Lawful Neutral",
-            "Lawful Evil",
-            "Neutral Good",
-            "True Neutral",
-            "Neutral Evil",
-            "Chaotic Good",
-            "Chaotic Neutral",
-            "Chaotic Evil"
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
         };
     }
 
@@ -110,23 +113,59 @@ namespace RPGCharacter
         public void SaveFunction(Character CharName)
         {
 
+            string connectionString = @"Data Source = (local)\SQLTESTSERVER; Initial Catalog = RPG; Integrated Security = True";
+            string storedProcedure = "dbo.Create_Character";
+            SqlConnection RPGDB = new SqlConnection(connectionString);
+            SqlCommand TestCommand = new SqlCommand(storedProcedure, RPGDB);
+            SqlDataReader TestReader;
+            TestCommand.CommandType = System.Data.CommandType.StoredProcedure;
 
-            //string User = System.Convert.ToString(System.Security.Principal.WindowsIdentity.GetCurrent());
-            string Path = @"C:\Users\erikwr\Documents\RPGSave.txt";
-            if (System.IO.File.Exists(Path))
-            {
-                System.IO.File.Delete(Path);
-            }
-            System.IO.File.AppendAllText(Path, CharName.Name + Environment.NewLine);
-            System.IO.File.AppendAllText(Path, "Strength: " + Convert.ToString(CharName.Strength) + Environment.NewLine);
-            System.IO.File.AppendAllText(Path, "Dexterity: " + Convert.ToString(CharName.Dexterity) + Environment.NewLine);
-            System.IO.File.AppendAllText(Path, "Constitution: " + Convert.ToString(CharName.Constitution) + Environment.NewLine);
-            System.IO.File.AppendAllText(Path, "Wisdom: " + Convert.ToString(CharName.Wisdom) + Environment.NewLine);
-            System.IO.File.AppendAllText(Path, "Intelligence: " + Convert.ToString(CharName.Intelligence) + Environment.NewLine);
-            System.IO.File.AppendAllText(Path, "Charisma: " + Convert.ToString(CharName.Charisma) + Environment.NewLine);
-            System.IO.File.AppendAllText(Path, "Alignment: " + CharName.Alignment + Environment.NewLine);
-            System.IO.File.AppendAllText(Path, "Bio: " + CharName.Bio + Environment.NewLine);
+            SqlParameter Name = new SqlParameter("@Name", CharName.Name);
+            TestCommand.Parameters.Add(Name);
+            SqlParameter Strength = new SqlParameter("@Strength", CharName.Strength);
+            TestCommand.Parameters.Add(Strength);
+            SqlParameter Dexterity = new SqlParameter("@Dexterity", CharName.Dexterity);
+            TestCommand.Parameters.Add(Dexterity);
+            SqlParameter Constitution = new SqlParameter("@Constitution", CharName.Constitution);
+            TestCommand.Parameters.Add(Constitution);
+            SqlParameter Wisdom = new SqlParameter("@Wisdom", CharName.Wisdom);
+            TestCommand.Parameters.Add(Wisdom);
+            SqlParameter Intelligence = new SqlParameter("@Intelligence", CharName.Intelligence);
+            TestCommand.Parameters.Add(Intelligence);
+            SqlParameter Charisma = new SqlParameter("@Charisma", CharName.Charisma);
+            TestCommand.Parameters.Add(Charisma);
+            SqlParameter Alignment = new SqlParameter("@Alignment", CharName.Alignment);
+            TestCommand.Parameters.Add(Alignment);
+            SqlParameter Bio = new SqlParameter("@Bio", CharName.Bio);
+            TestCommand.Parameters.Add(Bio);
+
+            RPGDB.Open();
+            TestReader = TestCommand.ExecuteReader();
+            RPGDB.Close();
         }
     }
+    public class TestDB
+    {
+        public void GetLine()
+        {
+            string connectionString = @"Data Source = (local)\SQLTESTSERVER; Initial Catalog = RPG; Integrated Security = True";
+            SqlConnection RPGDB = new SqlConnection(connectionString);
+            SqlCommand TestCommand = new SqlCommand();
+            SqlDataReader TestReader;
+            TestCommand.CommandText = "Select * from alignments";
+            TestCommand.CommandType = System.Data.CommandType.Text;
+            TestCommand.Connection = RPGDB;
 
+            RPGDB.Open();
+            TestReader = TestCommand.ExecuteReader();
+
+            while (TestReader.Read())
+            {
+                string AlignmentType = (string)TestReader[1];
+                Console.WriteLine(AlignmentType);
+            }
+
+            RPGDB.Close();
+        }
+    }
 }  
