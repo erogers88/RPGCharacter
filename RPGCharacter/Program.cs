@@ -1,23 +1,91 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Data.SqlClient;
-using Database;
+using Character;
 
-namespace RPGCharacter
+
+namespace MainGame
 {
     class Program
     {
         static void Main(string[] args)
         {
+            MainMenu MainMenu1 = new MainMenu();
+            MainMenu1.PrintMainMenu();
 
-            Character PC = new Character();
+            int NumResult = 0;
+            //Error Handling on a Convert Function
+            //          try
+            //          {
+            //              //Int32.TryParse(Console.ReadLine(), out NumResult);
+            //              NumResult = Convert.ToInt32(Console.ReadLine());
+            //               
+            //          }
+            //          catch
+            //          {
+            //              Console.WriteLine("Enter an integer you fucking asshole");
+            //              Console.ReadLine();
+            //          }
+            while (NumResult == 0)
+            {
+                string UserNameInput = Console.ReadLine();
+                Int32.TryParse(UserNameInput, out NumResult);
+                if(NumResult == 0)
+                {
+                    Console.WriteLine("Enter a number in range");
+                }
+                else if(NumResult < 1 || NumResult > 6)
+                {
+                    Console.WriteLine("Enter a number in range");
+                    NumResult = 0;
+                }
+            }
+            int NumChoice = NumResult;
+            if(NumChoice == 1)
+            {
+                NewGame NewGame1 = new NewGame();
+                NewGame1.Main();
+            }
+        }
+    }
+
+    public class MainMenu
+    {
+        public void PrintMainMenu()
+        {
+            Console.WriteLine("##############################################################################");
+            Console.WriteLine("###                                                                        ###");
+            Console.WriteLine("###                   #####   #####    #####  #####                        ###");
+            Console.WriteLine("###                     #     #         #       #                          ###");
+            Console.WriteLine("###                     #     ####       #      #                          ###");
+            Console.WriteLine("###                     #     #           #     #                          ###");
+            Console.WriteLine("###                     #     #####   #####     #                          ###");
+            Console.WriteLine("###                                                                        ###");
+            Console.WriteLine("###                       ######   ######   ######                         ###");
+            Console.WriteLine("###                       #   #    #   #    #                              ###");
+            Console.WriteLine("###                       # ##     # ##     #   ###                        ###");
+            Console.WriteLine("###                       #  #     #        #     #                        ###");
+            Console.WriteLine("###                       #   #    #        #######                        ###");
+            Console.WriteLine("###                                                                        ###");
+            Console.WriteLine("##############################################################################");
+            Console.WriteLine();
+            Console.WriteLine("                      1. New Game");
+            Console.WriteLine("                      2. Load Game");
+            Console.WriteLine("                      3. Options");
+            Console.WriteLine("                      4. How to Play");
+            Console.WriteLine("                      5. Monster Encyclopedia");
+            Console.WriteLine("                      6. Credits");
+        }
+    }
+
+    public class NewGame
+    {
+        public void Main()
+        {
+            PC PC1 = new PC();
 
             Console.WriteLine("What is your name?");
-            PC.Name = Console.ReadLine();
-            Console.WriteLine("Your name is {0}", PC.Name);
+            PC1.Name = Console.ReadLine();
+            Console.WriteLine("Your name is {0}", PC1.Name);
 
 
             Console.WriteLine("What is your alignment?");
@@ -28,97 +96,49 @@ namespace RPGCharacter
                 AlignLoopNumber++;
             }
             int AlignInput = (Convert.ToInt32(Console.ReadLine())) - 1;
-            PC.Alignment = Alignment.AlignmentType[AlignInput];
+            PC1.Alignment = Alignment.AlignmentType[AlignInput];
 
             Console.WriteLine("Press any key to roll your stats");
             Console.ReadLine();
             RollStats Roll1 = new RollStats();
-            Roll1.Main(PC);
+            Roll1.Main(PC1);
             PrintStats Print1 = new PrintStats();
-            Print1.Main(PC);
+            Print1.Main(PC1);
             Console.ReadLine();
 
-            SaveCharacter Save1 = new SaveCharacter();
-            Save1.SaveFunction(PC);
+            bool IsCharacterExists = false;
+            SaveCharacter Save1 = new SaveCharacter(IsCharacterExists);
+            Save1.SaveFunction(PC1);
 
-            TestDB WriteAlignments = new TestDB();
-            WriteAlignments.GetLine();
-
+            Console.WriteLine("Awesome. You've made a new character");
             Console.ReadLine();
-
         }
-    }
-    public class Character
-    {
-        public string Name { get; set; }
-        public int Strength { get; set; }
-        public int Dexterity { get; set; }
-        public int Constitution { get; set; }
-        public int Wisdom { get; set; }
-        public int Intelligence { get; set; }
-        public int Charisma { get; set; }
-        public int Alignment { get; set; }
-        public string Bio { get; set; }
-    }
-
-    public class RollStats
-    {
-        public void Main(Character Char)
-        {
-            Random rand = new Random();
-            Char.Strength = rand.Next(60, 90);
-            Char.Dexterity = rand.Next(60, 90);
-            Char.Constitution = rand.Next(60, 90);
-            Char.Wisdom = rand.Next(60, 90);
-            Char.Intelligence = rand.Next(60, 90);
-            Char.Charisma = rand.Next(60, 90);
-        }
-    }
-
-    public class PrintStats
-    {
-        public void Main(Character Char)
-        {
-            Console.WriteLine("Name: {0}", Char.Name);
-            Console.WriteLine("Strength: {0}", Char.Strength);
-            Console.WriteLine("Dexterity: {0}", Char.Dexterity);
-            Console.WriteLine("Constitution: {0}", Char.Constitution);
-            Console.WriteLine("Wisdom: {0}", Char.Wisdom);
-            Console.WriteLine("Intelligence: {0}", Char.Intelligence);
-            Console.WriteLine("Charisma: {0}", Char.Charisma);
-            Console.WriteLine("Alignment: {0}", Char.Alignment);
-            Console.WriteLine("Bio: {0}", Char.Bio);
-        }
-
-    }
-
-    public static class Alignment
-    {
-        public static int[] AlignmentType =
-{
-            1,
-            2,
-            3,
-            4,
-            5,
-            6,
-            7,
-            8,
-            9
-        };
     }
 
     public class SaveCharacter
     {
-        public void SaveFunction(Character CharName)
+        //This is a constructor that sets a flag if the character exists already
+        public SaveCharacter(bool exists)
         {
+            IsExistingCharacter = exists;
+        }
+        //This function opens a database connection and calls one of two stored procedures to either create or update a character record
+        public void SaveFunction(PC CharName)
+        {
+            string storedProcedure;
+            if(IsExistingCharacter)
+            {
+                storedProcedure = "dbo.Update_Character";
+            }
+            else
+            {
+                storedProcedure = "dbo.Create_Character";
+            }
 
-            string connectionString = @"Data Source = (local)\SQLTESTSERVER; Initial Catalog = RPG; Integrated Security = True";
-            string storedProcedure = "dbo.Create_Character";
             SqlConnection RPGDB = new SqlConnection(connectionString);
             SqlCommand TestCommand = new SqlCommand(storedProcedure, RPGDB);
-            SqlDataReader TestReader;
             TestCommand.CommandType = System.Data.CommandType.StoredProcedure;
+            SqlDataReader TestReader;
 
             SqlParameter Name = new SqlParameter("@Name", CharName.Name);
             TestCommand.Parameters.Add(Name);
@@ -143,7 +163,10 @@ namespace RPGCharacter
             TestReader = TestCommand.ExecuteReader();
             RPGDB.Close();
         }
+        private bool IsExistingCharacter { get; set; }
+        private string connectionString = @"Data Source = (local)\SQLTESTSERVER; Initial Catalog = RPG; Integrated Security = True";
     }
+
     public class TestDB
     {
         public void GetLine()
